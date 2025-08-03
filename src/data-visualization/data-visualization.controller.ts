@@ -1,4 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { DataVisualizationService } from './data-visualization.service';
 import { CreateDataVisualizationDto } from './dto/create-data-visualization.dto';
 import { connectDatabase } from 'src/configdb/connect';
@@ -9,22 +15,52 @@ export class DataVisualizationController {
     private readonly dataVisualizationService: DataVisualizationService,
   ) {}
 
-  @Post()
-  async executeQuery(@Body() query: CreateDataVisualizationDto) {
+  @Post('get-columns')
+  async getColumns(@Body() query: CreateDataVisualizationDto) {
     try {
-      const pool = await connectDatabase(query);
-      const result = await pool.request().query(query.querysql);
-      const columnNames = Object.keys(result.recordset.columns);
-      const columnCount = columnNames.length;
-      await pool.close();
-
+      const result = await this.dataVisualizationService.executeQuery(
+        query.host,
+        query.database,
+        query.username,
+        query.password,
+        query.querysql,
+      );
       return {
-        data: result.recordset,
-        columns: columnNames,
-        columnCount: columnCount,
+        columns: result.columns,
+        columnCount: result.columns.length,
       };
     } catch (error: any) {
-      console.log(error.message);
+      console.error(error.message);
+      throw new HttpException(
+        `Error executing query: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('execute-query')
+  async executeQuery(@Body() query: CreateDataVisualizationDto) {
+    try {
+      const result = await this.dataVisualizationService.executeQuery(
+        query.host,
+        query.database,
+        query.username,
+        query.password,
+        query.querysql,
+        query.checkedColumns || [],
+        query.aggregateFunction || '',
+        query.topNCount,
+      );
+      return {
+        columns: result.columns,
+        data: result.data,
+      };
+    } catch (error: any) {
+      console.error(error.message);
+      throw new HttpException(
+        `Error executing query: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
