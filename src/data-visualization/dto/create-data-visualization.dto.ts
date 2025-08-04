@@ -9,4 +9,7 @@ export class CreateDataVisualizationDto {
   checkedColumns?: string[];
   aggregateFunction?: string;
   topNCount?: number;
+  clause?: string
+  page?: number
+  limit?: number
 }

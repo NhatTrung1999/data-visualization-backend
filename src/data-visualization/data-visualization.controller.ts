@@ -32,7 +32,7 @@ export class DataVisualizationController {
     } catch (error: any) {
       console.error(error.message);
       throw new HttpException(
-        `Error executing query: ${error.message}`,
+        `${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -50,15 +50,21 @@ export class DataVisualizationController {
         query.checkedColumns || [],
         query.aggregateFunction || '',
         query.topNCount,
+        query.clause,
+        query.page || 1,
+        query.limit || 10,
       );
       return {
         columns: result.columns,
         data: result.data,
+        totalRecords: result.totalRecords,
+        page: result.page,
+        limit: result.limit,
       };
     } catch (error: any) {
       console.error(error.message);
       throw new HttpException(
-        `Error executing query: ${error.message}`,
+        `${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
