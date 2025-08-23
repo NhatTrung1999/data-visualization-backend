@@ -18,6 +18,7 @@ export class DataVisualizationController {
   @Post('get-columns')
   async getColumns(@Body() query: CreateDataVisualizationDto) {
     try {
+      console.log(query);
       const result = await this.dataVisualizationService.executeQuery(
         query.host,
         query.database,

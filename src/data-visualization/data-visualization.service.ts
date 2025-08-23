@@ -178,6 +178,7 @@ export class DataVisualizationService {
     limit: number = 10,
   ) {
     try {
+      // console.log(host, database, username, password, querysql, checkedColumns, aggregateFunction, topNCount, clause, page, limit);
       if (!this.restrictToSelectQuery(querysql)) {
         throw new Error('Only SELECT queries are allowed.');
       }
@@ -236,33 +237,41 @@ export class DataVisualizationService {
         if (aggregateFunction.toUpperCase() === 'TOP_N') {
           const orderColumn =
             checkedColumns[0] || columns[0] || '(SELECT NULL)';
-          const cteQuery = `
-            WITH TopOrders AS (
-              SELECT TOP ${topNCount} *
-              FROM (${querysql}) AS baseQuery
-              ORDER BY ${orderColumn} DESC
-            )
-            SELECT * FROM TopOrders
-          `;
+          // const cteQuery = `
+          //   WITH TopOrders AS (
+          //     SELECT TOP ${topNCount} *
+          //     FROM (${querysql}) AS baseQuery
+          //     ORDER BY [${orderColumn}] DESC
+          //   )
+          //   SELECT * FROM TopOrders
+          // `;
 
-          countQuery = `SELECT COUNT(*) AS total FROM (${cteQuery}) AS countBase`;
+          const cteQuery = `SELECT TOP ${topNCount} *
+                            FROM (${querysql}) AS baseQuery
+                            ORDER BY [${orderColumn}] DESC`;
+          // console.log(cteQuery);
+
 
           sqlQuery = `
-            ${cteQuery}
-            ORDER BY ${orderColumn} DESC
+            SELECT * 
+            FROM (${cteQuery}) as a
+            ORDER BY [${orderColumn}] DESC
             OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY
           `;
-          console.log(countQuery);
+
+          countQuery = `SELECT COUNT(*) AS total FROM (${sqlQuery}) AS countBase`;
+
+          // console.log(countQuery);
         } else {
           const selectColumns =
             clause === 'GROUP BY'
               ? columns.map((col) =>
                   checkedColumns.includes(col)
-                    ? `${aggregateFunction}(${col}) AS ${col}`
+                    ? `${aggregateFunction}([${col}]) AS [${col}]`
                     : col,
                 )
               : checkedColumns.map(
-                  (col) => `${aggregateFunction}(${col}) AS ${col}`,
+                  (col) => `${aggregateFunction}([${col}]) AS [${col}]`,
                 );
 
           const groupByColumns =
@@ -277,25 +286,29 @@ export class DataVisualizationService {
               : '';
 
           sqlQuery = `SELECT ${selectClause} FROM (${querysql}) AS baseQuery${groupByClause}
-                      ORDER BY ${checkedColumns[0] || columns[0] || '(SELECT NULL)'}
+                      ORDER BY [${checkedColumns[0] || columns[0] || '(SELECT NULL)'}]
                       OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
-
-          // Đếm dựa trên query gốc
+          // console.log(sqlQuery);
           countQuery = `SELECT COUNT(*) AS total FROM (${querysql}) AS baseQuery`;
+          // console.log(countQuery);
+
         }
       } else {
         sqlQuery = `
           ${querysql}
-          ORDER BY ${checkedColumns[0] || columns[0] || '(SELECT NULL)'}
+          ORDER BY [${checkedColumns[0] || columns[0] || '(SELECT NULL)'}]
           OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY
         `;
+        // console.log(sqlQuery);
+
         countQuery = `SELECT COUNT(*) AS total FROM (${querysql}) AS baseQuery`;
+        // console.log(countQuery);
       }
 
+      // console.log(sqlQuery);
       const countResult = await pool.request().query(countQuery);
       const totalRecords = countResult.recordset[0].total;
 
-      console.log(sqlQuery);
       const result = await pool.request().query(sqlQuery);
       const resultColumns = result.recordset.columns
         ? Object.keys(result.recordset.columns)
