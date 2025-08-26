@@ -7,9 +7,10 @@ export class CreateDataVisualizationDto {
   password: string;
   querysql: string;
   checkedColumns?: string[];
+  checkedClauseColumns?: string[];
   aggregateFunction?: string;
   topNCount?: number;
-  clause?: string
-  page?: number
-  limit?: number
+  clause?: string;
+  page?: number;
+  limit?: number;
 }

@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { DataVisualizationService } from './data-visualization.service';
 import { CreateDataVisualizationDto } from './dto/create-data-visualization.dto';
-import { connectDatabase } from 'src/configdb/connect';
 
 @Controller('data-visualization')
 export class DataVisualizationController {
@@ -18,7 +17,6 @@ export class DataVisualizationController {
   @Post('get-columns')
   async getColumns(@Body() query: CreateDataVisualizationDto) {
     try {
-      console.log(query);
       const result = await this.dataVisualizationService.executeQuery(
         query.host,
         query.database,
@@ -49,6 +47,7 @@ export class DataVisualizationController {
         query.password,
         query.querysql,
         query.checkedColumns || [],
+        query.checkedClauseColumns || [],
         query.aggregateFunction || '',
         query.topNCount,
         query.clause,
