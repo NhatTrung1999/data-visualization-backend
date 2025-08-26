@@ -195,7 +195,7 @@ export class DataVisualizationService {
         database,
         username,
         password,
-        querysql,
+        // querysql,
       });
 
       const tempResult = await pool.request().query(querysql);
@@ -288,10 +288,7 @@ export class DataVisualizationService {
           sqlQuery = `SELECT ${selectClause} FROM (${querysql}) AS baseQuery${groupByClause}
                       ORDER BY [${checkedColumns[0] || columns[0] || '(SELECT NULL)'}]
                       OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
-          // console.log(sqlQuery);
-          countQuery = `SELECT COUNT(*) AS total FROM (${querysql}) AS baseQuery`;
-          // console.log(countQuery);
-
+          countQuery = `SELECT COUNT(*) AS total FROM (SELECT ${selectClause} FROM (${querysql}) AS baseQuery${groupByClause}) as totalCount`;
         }
       } else {
         sqlQuery = `
@@ -299,13 +296,10 @@ export class DataVisualizationService {
           ORDER BY [${checkedColumns[0] || columns[0] || '(SELECT NULL)'}]
           OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY
         `;
-        // console.log(sqlQuery);
 
         countQuery = `SELECT COUNT(*) AS total FROM (${querysql}) AS baseQuery`;
-        // console.log(countQuery);
       }
 
-      // console.log(sqlQuery);
       const countResult = await pool.request().query(countQuery);
       const totalRecords = countResult.recordset[0].total;
 

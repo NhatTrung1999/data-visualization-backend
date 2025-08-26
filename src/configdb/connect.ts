@@ -5,7 +5,7 @@ export async function connectDatabase(configs: {
   database: string;
   username: string;
   password: string;
-  querysql: string;
+  // querysql: string;
 }) {
   const config: sql.config = {
     server: configs.host,

@@ -70,4 +70,15 @@ export class DataVisualizationController {
       );
     }
   }
+
+  // @Post('get-query')
+  // async getQuery(@Body() query: CreateDataVisualizationDto) {
+  //   return this.dataVisualizationService.getQuery(
+  //     query.host,
+  //     query.database,
+  //     query.username,
+  //     query.password,
+  //     query.querysql,
+  //   );
+  // }
 }
